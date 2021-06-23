@@ -40,15 +40,15 @@ class CalcAdapterImpl(holderImpl2:CalcHolderImpl) : RecyclerView.Adapter<CalcHol
                 //TODO DELETE ITEM
             }
         }
-        holder.cancel.setOnClickListener{
+        holder.cancel.setOnClickListener{position->
             val callback = onCancelCallback?:return@setOnClickListener
             if(calcItem != null)
             {
-                callback(holder.adapterPosition)
                 holder.delete.visibility = View.VISIBLE
                 holder.cancel.visibility = View.GONE
                 holder.midText.visibility = View.VISIBLE
                 holder.progress.visibility = View.GONE
+                callback(holder.adapterPosition)
                 //TODO WORKER TERMINATION
             }
         }
