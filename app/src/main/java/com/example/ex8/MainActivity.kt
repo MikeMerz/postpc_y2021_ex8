@@ -2,7 +2,6 @@ package com.example.ex8
 
 import android.content.*
 import android.os.Bundle
-import android.os.PersistableBundle
 import android.view.LayoutInflater
 import android.widget.Button
 import android.widget.EditText
@@ -10,7 +9,7 @@ import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-
+import androidx.work.*
 
 
 class MainActivity : AppCompatActivity() {
@@ -21,6 +20,7 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 //        val app: CalcApp = getApplicationContext() as CalcApp
+        var curWorkManager = WorkManager.getInstance(this)
         this.holderImpl = CalcHolderImpl(this.applicationContext)
         if (holderImpl == null) {
             holderImpl = CalcHolderImpl(this)
@@ -38,6 +38,12 @@ class MainActivity : AppCompatActivity() {
             builder.apply { setPositiveButton("Start",DialogInterface.OnClickListener{dialog,id->
                 input = inputField.text.toString()
                 holderImpl!!.addNewCalc(input.toInt())
+                val will = OneTimeWorkRequest.Builder(RootWorker::class.java).setInputData(Data.Builder().putLong("CalcValue",input.toLong()).build()).addTag("calc_a_lot_of_roots").build()
+                curWorkManager.enqueueUniqueWork(input,ExistingWorkPolicy.REPLACE,will)
+                val temp = CalcItem()
+                temp.setCalcValue(input.toInt())
+                temp.threadID = will.id
+
 
             })
                 setNegativeButton("Cancel",DialogInterface.OnClickListener{dialog,id->

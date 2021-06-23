@@ -1,9 +1,11 @@
 package com.example.ex8
 
 import android.app.Application
+import java.util.*
 
-class CalcItem(): Application() {
+class CalcItem() : Application() {
     private var id:Int=-1
+    lateinit var threadID:UUID
     private var calcValue=-1
     private var firstRoot:Int=-1
     private var secondRoot:Int=-1

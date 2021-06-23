@@ -31,6 +31,7 @@ class CalcHolderImpl(context: Context) :Serializable
             item.setSecondRoot(sp.getInt(it+"secondRoot",-3))
             item.setStatus(sp.getBoolean(it+"status",true))
             item.setId(it.toInt())
+            item.threadID=(UUID.fromString(sp.getString(it+"threadID","")))
             allList.add(item)
         }
         //TODO ADD SORT BY LOWEST CALVAL TO HIGHEST WITH SORT FUNCTION USING COMPARATOR
@@ -44,6 +45,7 @@ class CalcHolderImpl(context: Context) :Serializable
         edit.putInt(item.getId().toString()+"firstRoot",item.getFirstRoot())
         edit.putInt(item.getId().toString()+"secondRoot",item.getSecondRoot())
         edit.putBoolean(item.getId().toString()+"status",item.getStatus())
+        edit.putString(item.getId().toString()+"threadID",item.threadID.toString())
         edit.putStringSet("allIdSet",allIdSet)
         edit.apply()
     }
@@ -54,6 +56,7 @@ class CalcHolderImpl(context: Context) :Serializable
         edit.remove(item.getId().toString()+"firstRoot")
         edit.remove(item.getId().toString()+"secondRoot")
         edit.remove(item.getId().toString()+"status")
+        edit.remove(item.getId().toString()+"threadID")
         allIdSet?.remove(item.getId().toString())
         edit.apply()
     }
@@ -84,6 +87,18 @@ class CalcHolderImpl(context: Context) :Serializable
     {
         val state2 = state as TodoState
         allList = state2.savedItems!!
+    }
+    fun extractLastCalcFromSP(id:Int):Int
+    {
+        return sp.getInt(id.toString()+"lastCalc",-1)
+    }
+    fun saveLastInSP(value:String,last:Int)
+    {
+        sp.edit().putInt(value+"lastCalc",last).apply()
+    }
+    fun extractSecondRootCalcFromSP(id:Int):Int
+    {
+        return sp.getInt(id.toString()+"secondRoot",-1)
     }
     fun getCurrentItems():MutableList<CalcItem>{return allList}
     private fun sendBroadCast(keyWord: String, old_pos: Int) {
