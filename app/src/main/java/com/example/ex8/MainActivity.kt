@@ -2,11 +2,15 @@ package com.example.ex8
 
 import android.content.*
 import android.os.Bundle
+import android.app.Application
+import android.util.Log
 import android.view.LayoutInflater
+import android.view.View
 import android.widget.Button
 import android.widget.EditText
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.LiveData
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.work.*
@@ -19,12 +23,15 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-//        val app: CalcApp = getApplicationContext() as CalcApp
-        var curWorkManager = WorkManager.getInstance(this)
+        val app = application as CalcApp
+//        val app = CalcApp().getIns()
+        val curWorkManager = WorkManager.getInstance(this.applicationContext)
         this.holderImpl = CalcHolderImpl(this.applicationContext)
         if (holderImpl == null) {
             holderImpl = CalcHolderImpl(this)
         }
+        holderImpl = app.db
+        attachWorkers(holderImpl!!,curWorkManager)
         val adapter = CalcAdapterImpl(holderImpl!!)
         val calcRecyler :RecyclerView = findViewById(R.id.recyler)
         calcRecyler.adapter =adapter
@@ -43,8 +50,17 @@ class MainActivity : AppCompatActivity() {
                 val temp = CalcItem()
                 temp.setCalcValue(input.toInt())
                 temp.threadID = will.id
-
-
+                if(!input.isEmpty() && input.toInt()>0)
+                {
+//                    findViewById<Button>(R.id.newCalc).visibility = View.INVISIBLE
+//                    findViewById<Button>(R.id.progressBar).visibility=View.INVISIBLE
+                    val newCalc = CalcItem()
+                    newCalc.setCalcValue(input.toInt())
+                    if(holderImpl!!.startNewCalc(newCalc))
+                    {
+                        attachWorker(newCalc,curWorkManager)
+                    }
+                }
             })
                 setNegativeButton("Cancel",DialogInterface.OnClickListener{dialog,id->
                     dialog.dismiss()
@@ -82,7 +98,10 @@ class MainActivity : AppCompatActivity() {
         }
         registerReceiver(receiverDBChange, IntentFilter("db_change"))
 
-//        findViewById<Button>()
+//        findViewById<Button>(R.id.newCalc).setOnClickListener({
+//            findViewById<Button>(R.id.newCalc).visibility = View.GONE
+//            findViewById<Button>(R.id.progressBar).visibility=View.GONE
+//        })
     }
 
     override fun onDestroy() {
@@ -98,6 +117,43 @@ class MainActivity : AppCompatActivity() {
     override fun onSaveInstanceState(outState: Bundle) {
         super.onSaveInstanceState(outState)
         outState.putSerializable("toDo",holderImpl!!.saveState())
+    }
+    private fun attachWorkers(calc:CalcHolderImpl,workManage:WorkManager)
+    {
+        workManage.cancelAllWorkByTag("calc_roots")
+        for(singleCalc in calc.getCurrentItems())
+        {
+            if(singleCalc.getStatus())
+            {
+                attachWorker(singleCalc,workManage)
+            }
+        }
+    }
+    private fun attachWorker(calc: CalcItem,workManage: WorkManager)
+    {
+        val curWorker= OneTimeWorkRequest.Builder(RootWorker::class.java).setInputData(
+            Data.Builder().putInt("number",calc.getCalcValue()).build()).addTag("calc_roots").build()
+        calc.threadID = curWorker.id
+        holderImpl!!.updateSP(calc)
+        workManage.enqueueUniqueWork(calc.getCalcValue().toString(),ExistingWorkPolicy.KEEP,curWorker)
+        val workInfoLiveData: LiveData<WorkInfo> = workManage.getWorkInfoByIdLiveData(curWorker.id)
+        workInfoLiveData.observe(this,androidx.lifecycle.Observer {workInfo->
+            if(workInfo==null){return@Observer}
+            else if(workInfo.state==WorkInfo.State.SUCCEEDED)
+            {
+                val firstRoot = workInfo.outputData.getInt("firstRoot",-1)
+                val secondRoot = workInfo.outputData.getInt("secondRoot",-1)
+                calc.setFirstRoot(firstRoot)
+                calc.setSecondRoot(secondRoot)
+                holderImpl!!.finishedCalc(calc)
+
+            }
+            if(workInfo.progress.getInt("PROGRESS",0)>calc.getProgress())
+            {
+                calc.setProgress(workInfo.progress.getInt("PROGRESS",0))
+                holderImpl!!.updateProgressSP(calc)
+            }
+        })
     }
 
 }

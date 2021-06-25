@@ -4,6 +4,7 @@ import android.content.Context
 import android.content.Intent
 import java.io.Serializable
 import java.util.*
+import kotlin.Comparator
 import kotlin.collections.ArrayList
 import kotlin.collections.HashSet
 
@@ -34,6 +35,7 @@ class CalcHolderImpl(context: Context) :Serializable
             item.threadID=(UUID.fromString(sp.getString(it+"threadID","")))
             allList.add(item)
         }
+        allList!!.sortWith(sortComperator())
         //TODO ADD SORT BY LOWEST CALVAL TO HIGHEST WITH SORT FUNCTION USING COMPARATOR
 //        val res = allIdSet.sortedBy{cur->cur.}
     }
@@ -96,10 +98,63 @@ class CalcHolderImpl(context: Context) :Serializable
     {
         sp.edit().putInt(value+"lastCalc",last).apply()
     }
+    fun startNewCalc(item:CalcItem):Boolean
+    {
+        var tempCalc:CalcItem?=null
+        for(singleCalc in allList)
+        {
+            if(singleCalc.getCalcValue() == item.getCalcValue())
+            {
+                tempCalc = singleCalc
+            }
+        }
+        if(tempCalc ==null)
+        {
+            allList.add(0,item)
+            allList.sortWith(sortComperator())
+            updateSP(item)
+            sendBroadCast("newCalc",allList.indexOf(item))
+            return true
+        }
+        else
+        {
+            return false
+        }
+    }
+    fun finishedCalc(calcItem: CalcItem)
+    {
+        calcItem.setStatus(false)
+        updateSP(calcItem)
+        allList.sortWith(sortComperator())
+        sendBroadCast("calcDone", allList.indexOf(calcItem))
+    }
+    fun updateProgressSP(calcItem: CalcItem)
+    {
+        updateSP(calcItem)
+        sendBroadCast("progressUpdated", allList.indexOf(calcItem))
+    }
     fun extractSecondRootCalcFromSP(id:Int):Int
     {
         return sp.getInt(id.toString()+"secondRoot",-1)
     }
+    class sortComperator:Comparator<CalcItem?>
+    {
+        override fun compare(p0: CalcItem?, p1: CalcItem?): Int {
+            return if (p0!!.getStatus() == p1!!.getStatus()) {
+                if (p0.getCalcValue() < (p1.getCalcValue())) {
+                    -1
+                } else{
+                    1
+                }
+            } else {
+                if (p0.getStatus()) {
+                    1
+                } else {
+                    -1
+                }
+            }
+        }
+        }
     fun getCurrentItems():MutableList<CalcItem>{return allList}
     private fun sendBroadCast(keyWord: String, old_pos: Int) {
         val broad = Intent("db_change")
@@ -109,4 +164,4 @@ class CalcHolderImpl(context: Context) :Serializable
     class TodoState : Serializable {
         var savedItems: MutableList<CalcItem>? = null
     }
-}
+    }

@@ -24,6 +24,7 @@ class CalcAdapterImpl(holderImpl2:CalcHolderImpl) : RecyclerView.Adapter<CalcHol
             holder.delete!!.visibility = View.GONE
             holder.midText!!.visibility = View.GONE
             holder.progress!!.visibility = View.VISIBLE
+            holder.progress.progress = calcItem.getProgress()
         }
         else
         {
