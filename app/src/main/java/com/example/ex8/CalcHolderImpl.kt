@@ -2,6 +2,8 @@ package com.example.ex8
 
 import android.content.Context
 import android.content.Intent
+import android.widget.Toast
+import androidx.work.WorkManager
 import java.io.Serializable
 import java.util.*
 import kotlin.Comparator
@@ -26,16 +28,17 @@ class CalcHolderImpl(context: Context) :Serializable
         for(it in allIdSet!!)
         {
             var item = CalcItem()
-            item.setId(sp.getInt(it+"calcValue", -2))
+//            item.setId(sp.getInt(it+"calcValue", -2))
             item.setFirstRoot(sp.getInt(it+"firstRoot",-1))
             item.setCalcValue(sp.getInt(it+"calcValue",-1))
             item.setSecondRoot(sp.getInt(it+"secondRoot",-3))
+            item.setProgress(sp.getInt(it+"progress",0))
             item.setStatus(sp.getBoolean(it+"status",true))
             item.setId(it.toInt())
             item.threadID=(UUID.fromString(sp.getString(it+"threadID","")))
             allList.add(item)
         }
-        allList!!.sortWith(sortComperator())
+        allList.sortWith(sortComperator())
         //TODO ADD SORT BY LOWEST CALVAL TO HIGHEST WITH SORT FUNCTION USING COMPARATOR
 //        val res = allIdSet.sortedBy{cur->cur.}
     }
@@ -46,6 +49,7 @@ class CalcHolderImpl(context: Context) :Serializable
         edit.putInt(item.getId().toString()+"calcValue",item.getCalcValue())
         edit.putInt(item.getId().toString()+"firstRoot",item.getFirstRoot())
         edit.putInt(item.getId().toString()+"secondRoot",item.getSecondRoot())
+        edit.putInt(item.getId().toString()+"progress",item.getProgress())
         edit.putBoolean(item.getId().toString()+"status",item.getStatus())
         edit.putString(item.getId().toString()+"threadID",item.threadID.toString())
         edit.putStringSet("allIdSet",allIdSet)
@@ -53,22 +57,25 @@ class CalcHolderImpl(context: Context) :Serializable
     }
     fun deleteFromSP(item:CalcItem)
     {
+        allIdSet?.remove(item.getId().toString())
         val edit = sp.edit()
         edit.remove(item.getId().toString()+"calcValue")
         edit.remove(item.getId().toString()+"firstRoot")
         edit.remove(item.getId().toString()+"secondRoot")
+        edit.remove(item.getId().toString()+"progress")
         edit.remove(item.getId().toString()+"status")
+//        edit.remove(item.getId().toString()+"lastCalc")
         edit.remove(item.getId().toString()+"threadID")
-        allIdSet?.remove(item.getId().toString())
+        edit.putStringSet("allIdSet",allIdSet)
         edit.apply()
     }
-    fun addNewCalc(value :Int)
+    fun addNewCalc(item :CalcItem)
     {
-        val item = CalcItem()
-        item.setCalcValue(value)
+//        val item = CalcItem()
+//        item.setCalcValue(item)
         item.setStatus(true)
-        item.setId(value)
-        allList.add(item)
+//        item.setId(item)
+//        allList.add(item)
         updateSP(item)
         sendBroadCast("added_item",0);
 
@@ -78,6 +85,16 @@ class CalcHolderImpl(context: Context) :Serializable
         val old_pos = allList.indexOf(item)
         allList.remove(item)
         deleteFromSP(item)
+        sendBroadCast("deleted_item",old_pos)
+    }
+    fun cancelCalc(item: CalcItem)
+    {
+        val old_pos = allList.indexOf(item)
+        allList.remove(item)
+        deleteFromSP(item)
+        WorkManager.getInstance(curContext).cancelWorkById(item.threadID)
+        sp.edit().remove(item.getId().toString()+"lastCalc").apply()
+        sp.edit().remove(item.getId().toString()+"lastCalc").apply()
         sendBroadCast("deleted_item",old_pos)
     }
     fun saveState(): Serializable {
@@ -118,19 +135,22 @@ class CalcHolderImpl(context: Context) :Serializable
         }
         else
         {
+            Toast.makeText(curContext,"Value already Calced",Toast.LENGTH_LONG).show()
             return false
         }
     }
-    fun finishedCalc(calcItem: CalcItem)
+    fun finishedCalc(calcItem: CalcItem,workManager: WorkManager)
     {
         calcItem.setStatus(false)
-        updateSP(calcItem)
+        workManager.cancelWorkById(calcItem.threadID)
+//        updateSP(calcItem)
         allList.sortWith(sortComperator())
         sendBroadCast("calcDone", allList.indexOf(calcItem))
     }
     fun updateProgressSP(calcItem: CalcItem)
     {
-        updateSP(calcItem)
+//        updateSP(calcItem)
+        sp.edit().putInt(calcItem.getId().toString()+"progress",calcItem.getProgress())
         sendBroadCast("progressUpdated", allList.indexOf(calcItem))
     }
     fun extractSecondRootCalcFromSP(id:Int):Int

@@ -10,7 +10,7 @@ import kotlin.math.sqrt
 
 class RootWorker(context: Context, workerParams: WorkerParameters) : Worker(context, workerParams) {
     var curData: Data.Builder = Data.Builder()
-    private val waitingTime: Int = 100
+    private val waitingTime: Int = 10
     init {
         setProgressAsync(Data.Builder().putInt("PROGRESS",0).build())
     }
@@ -26,16 +26,16 @@ class RootWorker(context: Context, workerParams: WorkerParameters) : Worker(cont
         {
             check=2
         }
-        for(i in check .. numToCalc)
+        for(i in check .. numToCalcSquare.toInt())
         {
             try {
-                setProgressAsync(curData.putInt("PROGRESS",(i*100)/numToCalc).build())
-                Log.d("ASDASD",((i*100)/numToCalc).toString())
+                setProgressAsync(curData.putInt("PROGRESS",(i*100)/numToCalcSquare.toInt()).build())
+//                Log.d("ASDASD",((i*100)/numToCalc).toString())
                 Thread.sleep(waitingTime.toLong())
-                if(i%5000==0)
+                if(i%10==0)
                 {
-                    (applicationContext as CalcApp).db.saveLastInSP(numToCalc.toString()+"lastCalc",i)
-                    CalcApp().db.saveLastInSP(numToCalc.toString(),i.toInt())
+                    CalcApp.db.saveLastInSP(numToCalc.toString()+"lastCalc",i)
+//                    CalcApp.db.saveLastInSP(numToCalc.toString(),i.toInt())
                 }
             }catch (e:InterruptedException ){
              e.printStackTrace()
@@ -44,14 +44,11 @@ class RootWorker(context: Context, workerParams: WorkerParameters) : Worker(cont
             {
                 setProgressAsync(curData.putInt("PROGRESS",100).build())
                 return Result.success(Data.Builder().putInt("firstRoot",i).putInt("secondRoot",numToCalc/i).build())
-//                var newData :Data = Data.Builder().putLong("root1",i).putLong("root2",numToCalc/i).build()
-//                setProgressAsync(curData.putInt("PROGRESS",numToCalc.toInt()).build())
-//                return Result.success(newData)
             }
 
         }
         setProgressAsync(curData.putInt("PROGRESS",100).build())
-        return Result.success(Data.Builder().putInt("firstRoot",numToCalc).putInt("secodRoot",1).build())
+        return Result.success(Data.Builder().putInt("firstRoot",numToCalc).putInt("secondRoot",1).build())
     }
 
 }

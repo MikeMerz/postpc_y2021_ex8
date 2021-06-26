@@ -26,11 +26,8 @@ class MainActivity : AppCompatActivity() {
         val app = application as CalcApp
 //        val app = CalcApp().getIns()
         val curWorkManager = WorkManager.getInstance(this.applicationContext)
-        this.holderImpl = CalcHolderImpl(this.applicationContext)
-        if (holderImpl == null) {
-            holderImpl = CalcHolderImpl(this)
-        }
-        holderImpl = app.db
+//        this.holderImpl = CalcHolderImpl(this.applicationContext)
+        this.holderImpl = CalcApp.db
         attachWorkers(holderImpl!!,curWorkManager)
         val adapter = CalcAdapterImpl(holderImpl!!)
         val calcRecyler :RecyclerView = findViewById(R.id.recyler)
@@ -44,21 +41,23 @@ class MainActivity : AppCompatActivity() {
             builder.setView(viewInflated)
             builder.apply { setPositiveButton("Start",DialogInterface.OnClickListener{dialog,id->
                 input = inputField.text.toString()
-                holderImpl!!.addNewCalc(input.toInt())
-                val will = OneTimeWorkRequest.Builder(RootWorker::class.java).setInputData(Data.Builder().putLong("CalcValue",input.toLong()).build()).addTag("calc_a_lot_of_roots").build()
-                curWorkManager.enqueueUniqueWork(input,ExistingWorkPolicy.REPLACE,will)
+//                holderImpl!!.addNewCalc(input.toInt())
+//                val will = OneTimeWorkRequest.Builder(RootWorker::class.java).setInputData(Data.Builder().putInt("number",input.toInt()).build()).addTag("calc_a_lot_of_roots").build()
+//                curWorkManager.enqueueUniqueWork(input,ExistingWorkPolicy.REPLACE,will)
                 val temp = CalcItem()
                 temp.setCalcValue(input.toInt())
-                temp.threadID = will.id
+                temp.setId(input.toInt())
+//                temp.threadID = will.id
+                holderImpl!!.addNewCalc(temp)
                 if(!input.isEmpty() && input.toInt()>0)
                 {
 //                    findViewById<Button>(R.id.newCalc).visibility = View.INVISIBLE
 //                    findViewById<Button>(R.id.progressBar).visibility=View.INVISIBLE
-                    val newCalc = CalcItem()
-                    newCalc.setCalcValue(input.toInt())
-                    if(holderImpl!!.startNewCalc(newCalc))
+//                    val newCalc = CalcItem()
+//                    newCalc.setCalcValue(input.toInt())
+                    if(holderImpl!!.startNewCalc(temp))
                     {
-                        attachWorker(newCalc,curWorkManager)
+                        attachWorker(temp,curWorkManager)
                     }
                 }
             })
@@ -74,7 +73,7 @@ class MainActivity : AppCompatActivity() {
             holderImpl!!.deleteCalc(holderImpl!!.getCurrentItems().get(position))
         }
         adapter.onCancelCallback={position->
-            holderImpl!!.deleteCalc(holderImpl!!.getCurrentItems().get(position))
+            holderImpl!!.cancelCalc(holderImpl!!.getCurrentItems().get(position))
         }
 
         receiverDBChange = object : BroadcastReceiver() {
@@ -120,7 +119,7 @@ class MainActivity : AppCompatActivity() {
     }
     private fun attachWorkers(calc:CalcHolderImpl,workManage:WorkManager)
     {
-        workManage.cancelAllWorkByTag("calc_roots")
+        workManage.cancelAllWorkByTag("calc_a_lot_of_roots")
         for(singleCalc in calc.getCurrentItems())
         {
             if(singleCalc.getStatus())
@@ -132,7 +131,7 @@ class MainActivity : AppCompatActivity() {
     private fun attachWorker(calc: CalcItem,workManage: WorkManager)
     {
         val curWorker= OneTimeWorkRequest.Builder(RootWorker::class.java).setInputData(
-            Data.Builder().putInt("number",calc.getCalcValue()).build()).addTag("calc_roots").build()
+            Data.Builder().putInt("number",calc.getCalcValue()).build()).addTag("calc_a_lot_of_roots").build()
         calc.threadID = curWorker.id
         holderImpl!!.updateSP(calc)
         workManage.enqueueUniqueWork(calc.getCalcValue().toString(),ExistingWorkPolicy.KEEP,curWorker)
@@ -145,7 +144,7 @@ class MainActivity : AppCompatActivity() {
                 val secondRoot = workInfo.outputData.getInt("secondRoot",-1)
                 calc.setFirstRoot(firstRoot)
                 calc.setSecondRoot(secondRoot)
-                holderImpl!!.finishedCalc(calc)
+                holderImpl!!.finishedCalc(calc,workManage)
 
             }
             if(workInfo.progress.getInt("PROGRESS",0)>calc.getProgress())

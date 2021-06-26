@@ -4,7 +4,8 @@ import android.app.Application
 import androidx.work.Configuration
 
 class CalcApp :Application(){
-    lateinit var db:CalcHolderImpl
+    companion object {
+        lateinit var db:CalcHolderImpl}
     private var  ins:CalcApp?= null
     override fun onCreate() {
         super.onCreate()
