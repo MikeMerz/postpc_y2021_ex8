@@ -5,7 +5,9 @@ import androidx.work.Configuration
 
 class CalcApp :Application(){
     companion object {
-        lateinit var db:CalcHolderImpl}
+        lateinit var db:CalcHolderImpl
+        lateinit var app: CalcApp
+    }
     private var  ins:CalcApp?= null
     override fun onCreate() {
         super.onCreate()
@@ -13,9 +15,6 @@ class CalcApp :Application(){
         db = CalcHolderImpl(this.applicationContext)
     }
     fun getdb(): CalcHolderImpl {return db}
-    fun getIns():CalcApp?{return ins}
-//    override fun getWorkManagerConfiguration(): Configuration = Configuration.Builder()
-//        .setMinimumLoggingLevel(android.util.Log.INFO)
-//        .build()}
+    fun getIns():CalcApp?{return app}
 
 }

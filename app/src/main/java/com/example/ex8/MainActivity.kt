@@ -19,14 +19,12 @@ import androidx.work.*
 class MainActivity : AppCompatActivity() {
     var holderImpl:CalcHolderImpl?=null
     lateinit var receiverDBChange: BroadcastReceiver
+    lateinit var builder:AlertDialog.Builder
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-        val app = application as CalcApp
-//        val app = CalcApp().getIns()
-        val curWorkManager = WorkManager.getInstance(this.applicationContext)
-//        this.holderImpl = CalcHolderImpl(this.applicationContext)
+        val curWorkManager = WorkManager.getInstance(CalcApp.app)
         this.holderImpl = CalcApp.db
         attachWorkers(holderImpl!!,curWorkManager)
         val adapter = CalcAdapterImpl(holderImpl!!)
@@ -35,26 +33,18 @@ class MainActivity : AppCompatActivity() {
         calcRecyler.layoutManager = LinearLayoutManager(this,RecyclerView.VERTICAL,false)
         var input:String
         findViewById<Button>(R.id.newCalc).setOnClickListener{
-            val builder = AlertDialog.Builder(this)
+            builder = AlertDialog.Builder(this)
             val viewInflated = LayoutInflater.from(this).inflate(R.layout.dialog_input,null)
             val inputField = viewInflated.findViewById<EditText>(R.id.input)
             builder.setView(viewInflated)
             builder.apply { setPositiveButton("Start",DialogInterface.OnClickListener{dialog,id->
                 input = inputField.text.toString()
-//                holderImpl!!.addNewCalc(input.toInt())
-//                val will = OneTimeWorkRequest.Builder(RootWorker::class.java).setInputData(Data.Builder().putInt("number",input.toInt()).build()).addTag("calc_a_lot_of_roots").build()
-//                curWorkManager.enqueueUniqueWork(input,ExistingWorkPolicy.REPLACE,will)
                 val temp = CalcItem()
                 temp.setCalcValue(input.toInt())
                 temp.setId(input.toInt())
-//                temp.threadID = will.id
                 holderImpl!!.addNewCalc(temp)
                 if(!input.isEmpty() && input.toInt()>0)
                 {
-//                    findViewById<Button>(R.id.newCalc).visibility = View.INVISIBLE
-//                    findViewById<Button>(R.id.progressBar).visibility=View.INVISIBLE
-//                    val newCalc = CalcItem()
-//                    newCalc.setCalcValue(input.toInt())
                     if(holderImpl!!.startNewCalc(temp))
                     {
                         attachWorker(temp,curWorkManager)
@@ -67,7 +57,6 @@ class MainActivity : AppCompatActivity() {
             }
             builder.create()
             builder.show()
-            //TODO ADD WORKER TO START AND SHOW ON U
         }
         adapter.onDeleteCallback={position->
             holderImpl!!.deleteCalc(holderImpl!!.getCurrentItems().get(position))
@@ -96,11 +85,6 @@ class MainActivity : AppCompatActivity() {
             }
         }
         registerReceiver(receiverDBChange, IntentFilter("db_change"))
-
-//        findViewById<Button>(R.id.newCalc).setOnClickListener({
-//            findViewById<Button>(R.id.newCalc).visibility = View.GONE
-//            findViewById<Button>(R.id.progressBar).visibility=View.GONE
-//        })
     }
 
     override fun onDestroy() {
@@ -128,6 +112,7 @@ class MainActivity : AppCompatActivity() {
             }
         }
     }
+    fun getAlertDialog():AlertDialog{return builder.create()}
     private fun attachWorker(calc: CalcItem,workManage: WorkManager)
     {
         val curWorker= OneTimeWorkRequest.Builder(RootWorker::class.java).setInputData(

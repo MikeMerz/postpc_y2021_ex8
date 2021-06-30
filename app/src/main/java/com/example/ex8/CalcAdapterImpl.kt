@@ -17,7 +17,8 @@ class CalcAdapterImpl(holderImpl2:CalcHolderImpl) : RecyclerView.Adapter<CalcHol
 
     override fun onBindViewHolder(holder: CalcHolder, position: Int) {
         val calcItem = calculations.getCurrentItems().get(position)
-        holder.changeLeftText("The Roots For"+calcItem.getCalcValue())
+        holder.changeLeftText("The Roots For "+calcItem.getCalcValue())
+        holder.changeMidText("Roots are: "+calcItem.getFirstRoot()+"*"+calcItem.getSecondRoot())
         if(calcItem.getStatus())
         {
             holder.cancel!!.visibility = View.VISIBLE
