@@ -28,7 +28,6 @@ class CalcHolderImpl(context: Context) :Serializable
         for(it in allIdSet!!)
         {
             var item = CalcItem()
-//            item.setId(sp.getInt(it+"calcValue", -2))
             item.setFirstRoot(sp.getInt(it+"firstRoot",-1))
             item.setCalcValue(sp.getInt(it+"calcValue",-1))
             item.setSecondRoot(sp.getInt(it+"secondRoot",-3))
@@ -39,8 +38,6 @@ class CalcHolderImpl(context: Context) :Serializable
             allList.add(item)
         }
         allList.sortWith(sortComperator())
-        //TODO ADD SORT BY LOWEST CALVAL TO HIGHEST WITH SORT FUNCTION USING COMPARATOR
-//        val res = allIdSet.sortedBy{cur->cur.}
     }
     fun updateSP(item: CalcItem)
     {
@@ -64,18 +61,13 @@ class CalcHolderImpl(context: Context) :Serializable
         edit.remove(item.getId().toString()+"secondRoot")
         edit.remove(item.getId().toString()+"progress")
         edit.remove(item.getId().toString()+"status")
-//        edit.remove(item.getId().toString()+"lastCalc")
         edit.remove(item.getId().toString()+"threadID")
         edit.putStringSet("allIdSet",allIdSet)
         edit.apply()
     }
     fun addNewCalc(item :CalcItem)
     {
-//        val item = CalcItem()
-//        item.setCalcValue(item)
         item.setStatus(true)
-//        item.setId(item)
-//        allList.add(item)
         updateSP(item)
         sendBroadCast("added_item",0);
 
@@ -143,13 +135,11 @@ class CalcHolderImpl(context: Context) :Serializable
     {
         calcItem.setStatus(false)
         workManager.cancelWorkById(calcItem.threadID)
-//        updateSP(calcItem)
         allList.sortWith(sortComperator())
         sendBroadCast("calcDone", allList.indexOf(calcItem))
     }
     fun updateProgressSP(calcItem: CalcItem)
     {
-//        updateSP(calcItem)
         sp.edit().putInt(calcItem.getId().toString()+"progress",calcItem.getProgress())
         sendBroadCast("progressUpdated", allList.indexOf(calcItem))
     }

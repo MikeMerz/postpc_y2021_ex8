@@ -2,7 +2,6 @@ package com.example.ex8
 
 import android.content.*
 import android.os.Bundle
-import android.app.Application
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
@@ -32,26 +31,26 @@ class MainActivity : AppCompatActivity() {
         calcRecyler.adapter =adapter
         calcRecyler.layoutManager = LinearLayoutManager(this,RecyclerView.VERTICAL,false)
         var input:String
-        findViewById<Button>(R.id.newCalc).setOnClickListener{
+        var btn = findViewById<Button>(R.id.newCalc)
+        btn.setOnClickListener{
             builder = AlertDialog.Builder(this)
-            val viewInflated = LayoutInflater.from(this).inflate(R.layout.dialog_input,null)
+            val viewInflated = LayoutInflater.from(this).inflate(R.layout.dialog_input, null)
             val inputField = viewInflated.findViewById<EditText>(R.id.input)
             builder.setView(viewInflated)
-            builder.apply { setPositiveButton("Start",DialogInterface.OnClickListener{dialog,id->
-                input = inputField.text.toString()
-                val temp = CalcItem()
-                temp.setCalcValue(input.toInt())
-                temp.setId(input.toInt())
-                holderImpl!!.addNewCalc(temp)
-                if(!input.isEmpty() && input.toInt()>0)
-                {
-                    if(holderImpl!!.startNewCalc(temp))
-                    {
-                        attachWorker(temp,curWorkManager)
+            builder.apply {
+                setPositiveButton("Start", DialogInterface.OnClickListener { dialog, id ->
+                    input = inputField.text.toString()
+                    val temp = CalcItem()
+                    temp.setCalcValue(input.toInt())
+                    temp.setId(input.toInt())
+                    holderImpl!!.addNewCalc(temp)
+                    if (!input.isEmpty() && input.toInt() > 0) {
+                        if (holderImpl!!.startNewCalc(temp)) {
+                            attachWorker(temp, curWorkManager)
+                        }
                     }
-                }
-            })
-                setNegativeButton("Cancel",DialogInterface.OnClickListener{dialog,id->
+                })
+                setNegativeButton("Cancel", DialogInterface.OnClickListener { dialog, id ->
                     dialog.dismiss()
                 })
             }
@@ -139,5 +138,4 @@ class MainActivity : AppCompatActivity() {
             }
         })
     }
-
 }

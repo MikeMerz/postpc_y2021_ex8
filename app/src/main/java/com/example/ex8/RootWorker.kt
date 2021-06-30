@@ -30,12 +30,10 @@ class RootWorker(context: Context, workerParams: WorkerParameters) : Worker(cont
         {
             try {
                 setProgressAsync(curData.putInt("PROGRESS",(i*100)/numToCalcSquare.toInt()).build())
-//                Log.d("ASDASD",((i*100)/numToCalc).toString())
                 Thread.sleep(waitingTime.toLong())
                 if(i%10==0)
                 {
                     CalcApp.db.saveLastInSP(numToCalc.toString()+"lastCalc",i)
-//                    CalcApp.db.saveLastInSP(numToCalc.toString(),i.toInt())
                 }
             }catch (e:InterruptedException ){
              e.printStackTrace()

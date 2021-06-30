@@ -8,13 +8,11 @@ import androidx.recyclerview.widget.RecyclerView
 
 class CalcHolder(itemView: View
 ) : RecyclerView.ViewHolder(itemView) {
-     val itemView2=itemView
      val delete :ImageView?=itemView.findViewById(R.id.imageView)
      val cancel :ImageView? = itemView.findViewById(R.id.imageView2)
      val progress: ProgressBar? =itemView.findViewById(R.id.progressBar)
      val leftText:TextView?=itemView.findViewById(R.id.textView2)
      val midText:TextView?=itemView.findViewById(R.id.textView)
-     val idText: TextView?=itemView.findViewById(R.id.textView)
     fun  changeMidText(text:String)
     {
         if (midText != null) {
@@ -27,8 +25,4 @@ class CalcHolder(itemView: View
             leftText.setText(text)
         }
     }
-    fun  getDeleteButton(): ImageView? {
-        return delete
-    }
-
 }

@@ -39,7 +39,6 @@ class CalcAdapterImpl(holderImpl2:CalcHolderImpl) : RecyclerView.Adapter<CalcHol
             if(calcItem != null)
             {
                 callback(holder.adapterPosition)
-                //TODO DELETE ITEM
             }
         }
         holder.cancel.setOnClickListener{position->

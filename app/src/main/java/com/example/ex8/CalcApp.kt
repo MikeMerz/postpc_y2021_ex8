@@ -11,10 +11,8 @@ class CalcApp :Application(){
     private var  ins:CalcApp?= null
     override fun onCreate() {
         super.onCreate()
-        ins = this
+        app = this
         db = CalcHolderImpl(this.applicationContext)
     }
     fun getdb(): CalcHolderImpl {return db}
-    fun getIns():CalcApp?{return app}
-
 }
